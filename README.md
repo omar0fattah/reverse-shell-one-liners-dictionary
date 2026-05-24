@@ -1,6 +1,10 @@
 # reverse-shell-one-liners-dictionary
 Over 50+ ready-to-use reverse shell commands for penetration testing, CTFs, and authorized security assessments. Includes netcat, bash, python, php, powershell, perl, ruby, telnet, socat, node.js, java, lua, golang, awk, and troubleshooting tips.
 
+
+<a name="top"></a>
+
+
 # Reverse Shell One-Liners
 
 **A quick reference for spawning reverse shells on common platforms.**
@@ -28,7 +32,7 @@ Over 50+ ready-to-use reverse shell commands for penetration testing, CTFs, and 
 14. [Awk](#14-awk)
 15. [Troubleshooting](#15-troubleshooting)
 
-[🔝 Back to Top](#top)
+
 
 # 1. Netcat
 
